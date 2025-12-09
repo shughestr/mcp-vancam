@@ -138,7 +138,7 @@ mcp-vancam/
 
 ## License
 
-[Add your license here]
+MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
