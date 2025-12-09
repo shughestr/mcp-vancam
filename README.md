@@ -9,53 +9,11 @@ An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that p
 - 🌐 **Real-time data** from traffic cameras across North America
 - 🤖 **AI-ready** - Designed for use with AI agents and assistants
 
-## Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip
-
-### Setup
-
-1. Clone this repository:
-```bash
-git clone https://github.com/yourusername/mcp-vancam.git
-cd mcp-vancam
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
 ## Usage
 
-### With Claude Desktop
+The Vancam GPT is available in the [GPT Store](#gpt-store) for use with ChatGPT.
 
-Add this to your Claude Desktop MCP configuration file:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "vancam": {
-      "command": "python",
-      "args": ["/path/to/mcp-vancam/server.py"]
-    }
-  }
-}
-```
-
-### With Other MCP Clients
-
-The server communicates via stdio using the MCP protocol. Run:
-
-```bash
-python server.py
-```
+**Claude MCP Server:** Coming soon - This remote MCP server will connect to the Vancam.ai API. No local installation or dependencies will be required.
 
 ## Available Tools
 
@@ -164,29 +122,18 @@ result = get_camera_image(asset_id="12345")
 image_url = result["url"]
 ```
 
-## Development
-
-### Running Tests
-
-```bash
-python server.py
-```
-
-The server will run on stdio and communicate via the MCP protocol.
-
-### Project Structure
+## Project Structure
 
 ```
 mcp-vancam/
 ├── server.py          # MCP server implementation
-├── requirements.txt   # Python dependencies
 ├── openapi.yaml       # API specification
 └── README.md          # This file
 ```
 
 ## Related Projects
 
-- [Vancam.ai](https://vancam.ai) - Web interface for traffic cameras
+- [Vancam.ai](https://vancam.ai/mcp) - Web interface for traffic cameras
 - [Model Context Protocol](https://modelcontextprotocol.io) - MCP specification
 
 ## License
@@ -203,9 +150,17 @@ For issues and questions:
 - Open an issue on GitHub
 - Visit [Vancam.ai](https://vancam.ai)
 
-## ChatGPT Integration
+## GPT Store
 
-This MCP server is also available as a ChatGPT GPT:
+### Vancam
+
+The Vancam MCP server is available in the GPT Store as a ChatGPT GPT:
+
 - **GPT Store:** [Vancam GPT](https://chatgpt.com/g/g-693512b18c0481918eb9b2c5d77e9eaa-vancam)
 - **Name:** "vancam"
+- **Description:** Access real-time traffic camera data from Vancam.ai. Search cameras by location, radius, route, or get the nearest cameras to any point. Perfect for checking traffic conditions, planning routes, or monitoring road conditions across North America.
+
+
+
+
 
