@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vancam": {
+      "command": "python",
+      "args": ["server.py"]
+    }
+  }
+}
+

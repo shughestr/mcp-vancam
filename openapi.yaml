@@ -1,0 +1,213 @@
+openapi: 3.1.0
+info:
+  title: Vancam Camera API
+  version: "1.0.0"
+  description: >
+    Discover nearby traffic cameras in real world and fetch live camera images.
+
+servers:
+  - url: https://vancam.ai
+
+paths:
+  /sse/cameras:
+    get:
+      operationId: findCameras
+      x-url: https://vancam.ai/sse/cameras
+      summary: Search for traffic cameras using radius, route, bounds, or nearest mode.
+      description: |
+        This single endpoint supports multiple search types depending on the query parameters:
+
+        **Radius search**  
+        - Use when user asks for cameras "within X km"  
+        - Parameters: lat, lon, radius  
+
+        **Nearest cameras**  
+        - Use when user asks for "nearest cameras"  
+        - Parameters: lat, lon, nearest=true, limit  
+
+        **Route search**  
+        - Use when user asks for cameras "along a route from A to B"  
+        - Parameters: origin_lat, origin_lon, dest_lat, dest_lon, buffer  
+
+        **Bounds search**  
+        - Use when user asks for cameras "within map bounds"  
+        - Parameters: min_lat, min_lon, max_lat, max_lon
+      parameters:
+        - in: query
+          name: lat
+          schema:
+            type: number
+          description: Latitude for radius or nearest search.
+        - in: query
+          name: lon
+          schema:
+            type: number
+          description: Longitude for radius or nearest search.
+        - in: query
+          name: radius
+          schema:
+            type: number
+          description: Radius in kilometers for nearby search.
+        - in: query
+          name: origin_lat
+          schema:
+            type: number
+          description: Origin latitude for route search.
+        - in: query
+          name: origin_lon
+          schema:
+            type: number
+          description: Origin longitude for route search.
+        - in: query
+          name: dest_lat
+          schema:
+            type: number
+          description: Destination latitude for route search.
+        - in: query
+          name: dest_lon
+          schema:
+            type: number
+          description: Destination longitude for route search.
+        - in: query
+          name: buffer
+          schema:
+            type: number
+          description: Buffer distance in meters for route search.
+        - in: query
+          name: min_lat
+          schema:
+            type: number
+          description: Southwest latitude for bounds search.
+        - in: query
+          name: min_lon
+          schema:
+            type: number
+          description: Southwest longitude for bounds search.
+        - in: query
+          name: max_lat
+          schema:
+            type: number
+          description: Northeast latitude for bounds search.
+        - in: query
+          name: max_lon
+          schema:
+            type: number
+          description: Northeast longitude for bounds search.
+        - in: query
+          name: nearest
+          schema:
+            type: boolean
+          description: If true, returns nearest cameras instead of radius search.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Max number of cameras to return for nearest search.
+      x-examples:
+        radius:
+          summary: Cameras within 1 km
+          value: /sse/cameras?lat=49.28&lon=-123.12&radius=1
+        nearest:
+          summary: 5 nearest cameras
+          value: /sse/cameras?lat=49.28&lon=-123.12&nearest=true&limit=5
+        route:
+          summary: Cameras along route
+          value: /sse/cameras?origin_lat=49.28&origin_lon=-123.12&dest_lat=49.30&dest_lon=-123.09&buffer=100
+        bounds:
+          summary: Cameras in map bounds
+          value: /sse/cameras?min_lat=49.2&min_lon=-123.2&max_lat=49.3&max_lon=-123.0
+      responses:
+        "200":
+          description: Cameras found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    description: Radius search result
+                    properties:
+                      type:
+                        type: string
+                        example: "radius"
+                      count:
+                        type: integer
+                        description: Number of cameras returned
+                      radius_km:
+                        type: number
+                        description: Radius in kilometers used for search
+                      cameras:
+                        type: array
+                        items:
+                          type: object
+                  - type: object
+                    description: Route search result
+                    properties:
+                      type:
+                        type: string
+                        example: "route"
+                      count:
+                        type: integer
+                        description: Number of cameras returned
+                      buffer_meters:
+                        type: number
+                        description: Buffer distance in meters used for route search
+                      cameras:
+                        type: array
+                        items:
+                          type: object
+                  - type: object
+                    description: Bounds search result
+                    properties:
+                      type:
+                        type: string
+                        example: "bounds"
+                      count:
+                        type: integer
+                        description: Number of cameras returned
+                      cameras:
+                        type: array
+                        items:
+                          type: object
+                  - type: object
+                    description: Nearest search result
+                    properties:
+                      type:
+                        type: string
+                        example: "nearest"
+                      count:
+                        type: integer
+                        description: Number of cameras returned
+                      cameras:
+                        type: array
+                        items:
+                          type: object
+
+  /sse/image:
+    get:
+      operationId: cameraImage
+      x-url: https://vancam.ai/sse/image
+      summary: Get a camera image by asset_id
+      description: Fetch the latest image from a camera given its asset_id.
+      parameters:
+        - in: query
+          name: asset_id
+          required: true
+          schema:
+            type: string
+          description: Asset ID of the camera
+      x-examples:
+        get_image:
+          summary: Get camera image by asset_id
+          value: /sse/image?asset_id=123
+      responses:
+        "200":
+          description: Binary camera image (e.g., JPEG)
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+components:
+  schemas: {}
+
