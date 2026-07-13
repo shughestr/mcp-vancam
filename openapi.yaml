@@ -3,10 +3,22 @@ info:
   title: Vancam Camera API
   version: "1.0.0"
   description: >
-    Discover nearby traffic cameras in real world and fetch live camera images.
+    Discover nearby traffic cameras and fetch live camera images.
+    Implemented by the OpenLens PostGIS backend (~4k live cameras).
+
+    **Production endpoints** (used by MCP server and vancam.ai web app):
+    - Camera search: `https://api.vancam.ai/cameras/cameras` (same as upload2s3/index.html)
+    - Alternate gateway: `https://vancam.ai/sse/cameras`
+    - Live image (web app): `https://api.vancam.ai/api?asset_id={id}`
+    - Live image (alternate): `https://vancam.ai/sse/image?asset_id={id}`
+
+    OpenAPI field reference: `vancam_feature_along_route/ADE/openapi specification for openlens.yml`
 
 servers:
-  - url: https://vancam.ai
+  - url: https://api.vancam.ai/cameras/cameras
+    description: OpenLens spatial search (VanCam web app)
+  - url: https://vancam.ai/sse
+    description: Vancam SSE gateway (same backend)
 
 paths:
   /sse/cameras:

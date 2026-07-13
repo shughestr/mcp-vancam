@@ -40,3 +40,9 @@ Thumbs.db
 # MCP
 *.log
 
+
+# Secrets
+.env
+
+# Archived/unused files (not part of the active MCP server)
+archive/

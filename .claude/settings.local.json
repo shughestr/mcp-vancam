@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.vancam.ai/api?asset_id=30200\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)",
+      "Bash(nslookup openlensdb3.cjy2ejjqepfz.us-east-1.rds.amazonaws.com)",
+      "Bash(nslookup google.com)",
+      "Bash(curl -sI --max-time 5 https://www.google.com)",
+      "Bash(sort -u -t: -k3)",
+      "Bash(awk -F'\\\\\\\\.rds\\\\\\\\.amazonaws\\\\\\\\.com' '{print $1}')",
+      "Bash(aws --version)",
+      "Bash(aws sts *)",
+      "Bash(aws configure *)",
+      "Bash(aws lambda *)",
+      "Bash(rm -f lambda2_deploy.zip)",
+      "Bash(cp \"/home/piddy/Dev/openlens_feature_private_links/AWS infra lambda vpc rds/openlenslambda2_for_AWS.py\" .)",
+      "Bash(zip lambda2_deploy.zip openlenslambda2_for_AWS.py)",
+      "Bash(unzip -l lambda2_deploy.zip)",
+      "Bash(curl -s -w \"\\\\nhttp_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api?asset_id=29757\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(curl -s -o /dev/null -w \"http_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api?asset_id=239749284\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(curl -s -w \"\\\\nhttp_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(curl -s -w \"\\\\nhttp_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api?asset_id=abc\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(curl -s -w \"\\\\nhttp_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api?asset_id=277181402\")",
+      "Bash(curl -s -w \"\\\\nhttp_status=%{http_code}\\\\n\" \"https://api.vancam.ai/api?asset_id=277181402\" -H \"x-api-key: wKGT4zdqgx3XJq182dL1a6pooN8dF5Mj6bcmMiBT\")",
+      "Bash(aws apigateway *)",
+      "Bash(aws apigatewayv2 *)",
+      "Bash(aws logs *)",
+      "Bash(mkdir -p /home/piddy/Dev/mcp-vancam/archive/docs /home/piddy/Dev/mcp-vancam/archive/road_conditions)",
+      "Bash(git mv *)",
+      "Bash(mv \"DISTRIBUTION_METHODS.md\" archive/docs/)",
+      "Bash(mv \"MAPBOX_VS_VANCAM_COMPARISON.md\" archive/docs/)",
+      "Bash(mv \"NEAREST_CAMERAS_TABLE_BRAINSTORM.md\" archive/docs/)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "vancam"
+  ]
+}
