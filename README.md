@@ -1,10 +1,10 @@
 # Vancam MCP Server
 
-An [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server that gives AI agents live access to [Vancam.ai](https://vancam.ai)'s traffic camera network — ~4,000 cameras across North America, searchable by map bounds, radius, route, or nearest point.
+[Vancam.ai](https://vancam.ai) — **Traffic Cameras & Road Conditions** — as an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server. Gives AI agents live access to the same camera network behind Vancam's road-condition data: over 1 million traffic cameras worldwide, searchable by map bounds, radius, route, or nearest point.
 
 - 🔍 **Search cameras** by bounding box, radius, route corridor, or nearest-to-point
 - 📸 **Fetch live frames** by camera asset ID, returned directly in the tool result
-- 🌐 **Real-time data** from the same OpenLens backend that powers the [Vancam.ai](https://vancam.ai) map
+- 🌐 **Real-time data** from the same backend that powers the [Vancam.ai](https://vancam.ai) map
 - 🤖 **AI-ready** — built with [FastMCP](https://github.com/modelcontextprotocol/python-sdk), works with Claude Desktop, Claude Code, and any MCP-compatible client
 
 ## Quick Start
@@ -117,20 +117,18 @@ Returns documentation for all search modes, camera fields, and image URL pattern
 
 ## API Reference
 
-Every search tool queries the same OpenLens spatial API that backs the [Vancam.ai](https://vancam.ai) map:
+Every search tool queries the same spatial API that backs the [Vancam.ai](https://vancam.ai) map:
 
 | Purpose | URL |
 |---|---|
-| Spatial search (default) | `https://api.vancam.ai/cameras/cameras` |
-| Spatial search (alternate gateway) | `https://vancam.ai/sse/cameras` |
-| Live image (default) | `https://api.vancam.ai/api?asset_id={id}` |
-| Live image (alternate gateway) | `https://vancam.ai/sse/image?asset_id={id}` |
+| Spatial search | `https://api.vancam.ai/cameras/cameras` |
+| Live image | `https://api.vancam.ai/api?asset_id={id}` |
 
 Each camera includes `asset_id`, `latitude`, `longitude`, `street_address`, `direction`, `camera_class` (`open`/`premium`), `level1`/`level2`/`level3` (country/state/city), `distance_meters` (radius/nearest searches), `route_fraction` (route search), and `image_url`/`image_urls`.
 
 Full schema: [`openapi.yaml`](openapi.yaml).
 
-**Environment overrides:** `VANCAM_API_KEY`, `VANCAM_CAMERAS_SEARCH_URL`, `VANCAM_API_IMAGE_URL`, `VANCAM_SSE_CAMERAS_URL`, `VANCAM_SSE_IMAGE_URL`
+**Environment overrides:** `VANCAM_API_KEY`, `VANCAM_CAMERAS_SEARCH_URL`, `VANCAM_API_IMAGE_URL`
 
 ## Project Structure
 

@@ -1,20 +1,18 @@
 """
 Vancam MCP Server — camera discovery + images.
 
-Spatial search uses the same OpenLens API as the VanCam web app
-(vancam_feature_along_route/upload2s3/index.html):
-  bounds, radius, route, and nearest queries against ~4k live cameras.
+Spatial search uses the same API as the VanCam web app (vancam.ai):
+  bounds, radius, route, and nearest queries against 1M+ live cameras worldwide.
 
-See camera_api.py and ADE/openapi specification for openlens.yml in vancam_feature_along_route.
+See camera_api.py and openapi.yaml for the full API specification.
 """
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.utilities.types import Image
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from camera_api import (
-    DEFAULT_VANCAM_IMAGE_URL,
     fetch_cameras,
     fetch_image_bytes,
     image_urls,
@@ -27,7 +25,7 @@ _CAMERA_FIELDS_DOC = (
     "Each camera includes asset_id, latitude, longitude, street_address, direction, "
     "camera_class (open|premium), level1/level2/level3 (country/state/city), "
     "distance_meters (radius/nearest), route_fraction (route search, 0–1 along path), "
-    "image_url (primary live frame), and image_urls.vancam_api / image_urls.vancam. "
+    "image_url (primary live frame), and image_urls.vancam_api. "
     "These URLs require an x-api-key header and return 403 Forbidden if opened "
     "directly (browser, bare curl, or handed to the user as a link) — call "
     "get_camera_image(asset_id) to actually fetch/display a frame."
@@ -65,9 +63,9 @@ def list_cameras(
     """
     List traffic cameras within a map bounding box.
 
-    Same query the VanCam web app runs when the user pans/zooms the map
-    (fetchCamerasInBounds in index.html). Use when the user asks for cameras
-    in a visible map area or geographic rectangle.
+    Same query the VanCam web app (vancam.ai) runs when the user pans/zooms
+    the map. Use when the user asks for cameras in a visible map area or
+    geographic rectangle.
 
     Parameters:
         min_lat, min_lon, max_lat, max_lon: Bounding box (WGS84)
@@ -75,7 +73,7 @@ def list_cameras(
         active_only: If true, return only camera_class=open (live feeds)
 
     Returns:
-        OpenLens bounds search JSON with enriched image_url per camera.
+        Bounds search JSON with enriched image_url per camera.
     """
     if limit <= 0 or limit > MAX_LIMIT:
         raise ValueError(f"limit must be between 1 and {MAX_LIMIT}")
@@ -104,7 +102,7 @@ def get_cameras_by_radius(
     """
     Get traffic cameras within a radius (km) of a lat/lon point.
 
-    OpenLens radius search. Use when the user asks for cameras near a place,
+    Radius search. Use when the user asks for cameras near a place,
     within X km of coordinates, or around an address they geocoded.
 
     Parameters:
@@ -146,11 +144,11 @@ def get_cameras_along_route(
     """
     Get traffic cameras along a straight-line route between two points.
 
-    Same API call as fetchAndDisplayCamerasAlongRoute in index1.html.
+    Same API call as the VanCam web app (vancam.ai) route view.
     Cameras are returned sorted by route_fraction (0 = origin, 1 = destination).
 
     Note: Uses a straight line between origin and destination (PostGIS ST_MakeLine),
-    not the Mapbox driving polyline. Buffer is meters perpendicular to that line.
+    not a driving route polyline. Buffer is meters perpendicular to that line.
 
     Parameters:
         origin_lat, origin_lon: Route start (WGS84)
@@ -191,7 +189,7 @@ def get_nearest_cameras(
     """
     Get the nearest traffic cameras to a geographic point.
 
-    OpenLens KNN nearest search. Use when the user asks for the closest
+    Nearest-neighbor search. Use when the user asks for the closest
     camera(s) to a location.
 
     Parameters:
@@ -229,7 +227,7 @@ def get_camera_image(asset_id: str) -> Any:
     fetches the frame server-side instead and returns the image bytes.
 
     Parameters:
-        asset_id: OpenLens camera asset ID (integer as string)
+        asset_id: Vancam camera asset ID (integer as string)
 
     Returns:
         The live image, plus asset_id/url metadata for reference.
@@ -260,20 +258,20 @@ def get_camera_image(asset_id: str) -> Any:
 @mcp.tool()
 def describe_camera_api() -> Dict[str, Any]:
     """
-    Describe the OpenLens spatial camera API exposed by this MCP server.
+    Describe the spatial camera API exposed by this MCP server.
 
     Call this first when unsure which search tool to use. Documents the same
     capabilities as the VanCam map web app (bounds pan, radius, route, nearest).
     """
     return {
-        "description": "OpenLens traffic camera spatial search (~4k live open cameras in North America)",
-        "web_app_reference": "vancam_feature_along_route/upload2s3/index.html",
-        "openapi_reference": "vancam_feature_along_route/ADE/openapi specification for openlens.yml",
+        "description": "Vancam traffic camera spatial search (1M+ live open cameras worldwide)",
+        "web_app_reference": "https://vancam.ai",
+        "openapi_reference": "openapi.yaml",
         "search_modes": {
             "bounds": {
                 "tool": "list_cameras",
                 "params": ["min_lat", "min_lon", "max_lat", "max_lon", "limit"],
-                "web_app_usage": "Map pan/zoom — fetchCamerasInBounds when zoom >= 8",
+                "web_app_usage": "Map pan/zoom, once zoomed in past a threshold",
             },
             "radius": {
                 "tool": "get_cameras_by_radius",
@@ -282,8 +280,8 @@ def describe_camera_api() -> Dict[str, Any]:
             "route": {
                 "tool": "get_cameras_along_route",
                 "params": ["origin_lat", "origin_lon", "dest_lat", "dest_lon", "buffer_m", "limit"],
-                "web_app_usage": "index1.html — fetchAndDisplayCamerasAlongRoute (buffer=100, limit=50)",
-                "note": "Straight-line corridor, not Mapbox driving geometry",
+                "web_app_usage": "Route view (default buffer=100, limit=50)",
+                "note": "Straight-line corridor, not driving-route geometry",
             },
             "nearest": {
                 "tool": "get_nearest_cameras",
@@ -293,16 +291,15 @@ def describe_camera_api() -> Dict[str, Any]:
         "camera_fields": _CAMERA_FIELDS_DOC,
         "image_endpoints": {
             "vancam_api": "https://api.vancam.ai/api?asset_id={asset_id}",
-            "vancam_sse": DEFAULT_VANCAM_IMAGE_URL + "?asset_id={asset_id}",
         },
-        "limits": {"max_results_per_query": MAX_LIMIT, "premium_cameras": "~54k reserved slots without live URL — filter with active_only=true"},
+        "limits": {"max_results_per_query": MAX_LIMIT},
     }
 
 
 if __name__ == "__main__":
     try:
         print("Vancam MCP server running on stdio", file=sys.stderr)
-        print("OpenLens camera discovery: bounds, radius, route, nearest", file=sys.stderr)
+        print("Vancam camera discovery: bounds, radius, route, nearest", file=sys.stderr)
         mcp.run()
     except KeyboardInterrupt:
         print("Server interrupted", file=sys.stderr)

@@ -30,7 +30,9 @@
       "Bash(git mv *)",
       "Bash(mv \"DISTRIBUTION_METHODS.md\" archive/docs/)",
       "Bash(mv \"MAPBOX_VS_VANCAM_COMPARISON.md\" archive/docs/)",
-      "Bash(mv \"NEAREST_CAMERAS_TABLE_BRAINSTORM.md\" archive/docs/)"
+      "Bash(mv \"NEAREST_CAMERAS_TABLE_BRAINSTORM.md\" archive/docs/)",
+      "Bash(echo \"exit: $?\")",
+      "WebFetch(domain:vancam.ai)"
     ]
   },
   "enabledMcpjsonServers": [

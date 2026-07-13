@@ -4,46 +4,41 @@ info:
   version: "1.0.0"
   description: >
     Discover nearby traffic cameras and fetch live camera images.
-    Implemented by the OpenLens PostGIS backend (~4k live cameras).
-
-    **Production endpoints** (used by MCP server and vancam.ai web app):
-    - Camera search: `https://api.vancam.ai/cameras/cameras` (same as upload2s3/index.html)
-    - Alternate gateway: `https://vancam.ai/sse/cameras`
-    - Live image (web app): `https://api.vancam.ai/api?asset_id={id}`
-    - Live image (alternate): `https://vancam.ai/sse/image?asset_id={id}`
-
-    OpenAPI field reference: `vancam_feature_along_route/ADE/openapi specification for openlens.yml`
+    Backed by a PostGIS spatial database (1M+ live cameras worldwide).
+    Every request requires an `x-api-key` header (see security scheme below).
 
 servers:
-  - url: https://api.vancam.ai/cameras/cameras
-    description: OpenLens spatial search (VanCam web app)
-  - url: https://vancam.ai/sse
-    description: Vancam SSE gateway (same backend)
+  - url: https://api.vancam.ai
+    description: Vancam API (production)
+
+security:
+  - ApiKeyAuth: []
 
 paths:
-  /sse/cameras:
+  /cameras/cameras:
     get:
       operationId: findCameras
-      x-url: https://vancam.ai/sse/cameras
       summary: Search for traffic cameras using radius, route, bounds, or nearest mode.
       description: |
         This single endpoint supports multiple search types depending on the query parameters:
 
-        **Radius search**  
-        - Use when user asks for cameras "within X km"  
-        - Parameters: lat, lon, radius  
+        **Radius search**
+        - Use when user asks for cameras "within X km"
+        - Parameters: lat, lon, radius[, limit]
 
-        **Nearest cameras**  
-        - Use when user asks for "nearest cameras"  
-        - Parameters: lat, lon, nearest=true, limit  
+        **Nearest cameras**
+        - Use when user asks for "nearest cameras"
+        - Parameters: lat, lon, nearest=true[, limit]
 
-        **Route search**  
-        - Use when user asks for cameras "along a route from A to B"  
-        - Parameters: origin_lat, origin_lon, dest_lat, dest_lon, buffer  
+        **Route search**
+        - Use when user asks for cameras "along a route from A to B"
+        - Parameters: origin_lat, origin_lon, dest_lat, dest_lon, buffer[, limit]
 
-        **Bounds search**  
-        - Use when user asks for cameras "within map bounds"  
-        - Parameters: min_lat, min_lon, max_lat, max_lon
+        **Bounds search**
+        - Use when user asks for cameras "within map bounds"
+        - Parameters: min_lat, min_lon, max_lat, max_lon[, limit]
+
+        `limit` applies to all four search types (default varies by tool, max 100).
       parameters:
         - in: query
           name: lat
@@ -59,7 +54,7 @@ paths:
           name: radius
           schema:
             type: number
-          description: Radius in kilometers for nearby search.
+          description: Radius in kilometers for radius search.
         - in: query
           name: origin_lat
           schema:
@@ -109,25 +104,26 @@ paths:
           name: nearest
           schema:
             type: boolean
-          description: If true, returns nearest cameras instead of radius search.
+          description: If true, performs a nearest-cameras search instead of radius search (requires lat/lon).
         - in: query
           name: limit
           schema:
             type: integer
-          description: Max number of cameras to return for nearest search.
+            maximum: 100
+          description: Max number of cameras to return. Applies to all search modes (max 100).
       x-examples:
         radius:
           summary: Cameras within 1 km
-          value: /sse/cameras?lat=49.28&lon=-123.12&radius=1
+          value: /cameras/cameras?lat=49.28&lon=-123.12&radius=1
         nearest:
           summary: 5 nearest cameras
-          value: /sse/cameras?lat=49.28&lon=-123.12&nearest=true&limit=5
+          value: /cameras/cameras?lat=49.28&lon=-123.12&nearest=true&limit=5
         route:
           summary: Cameras along route
-          value: /sse/cameras?origin_lat=49.28&origin_lon=-123.12&dest_lat=49.30&dest_lon=-123.09&buffer=100
+          value: /cameras/cameras?origin_lat=49.28&origin_lon=-123.12&dest_lat=49.30&dest_lon=-123.09&buffer=100
         bounds:
           summary: Cameras in map bounds
-          value: /sse/cameras?min_lat=49.2&min_lon=-123.2&max_lat=49.3&max_lon=-123.0
+          value: /cameras/cameras?min_lat=49.2&min_lon=-123.2&max_lat=49.3&max_lon=-123.0
       responses:
         "200":
           description: Cameras found
@@ -140,7 +136,7 @@ paths:
                     properties:
                       type:
                         type: string
-                        example: "radius"
+                        example: "radius_search"
                       count:
                         type: integer
                         description: Number of cameras returned
@@ -150,13 +146,13 @@ paths:
                       cameras:
                         type: array
                         items:
-                          type: object
+                          $ref: "#/components/schemas/Camera"
                   - type: object
                     description: Route search result
                     properties:
                       type:
                         type: string
-                        example: "route"
+                        example: "route_search"
                       count:
                         type: integer
                         description: Number of cameras returned
@@ -166,40 +162,39 @@ paths:
                       cameras:
                         type: array
                         items:
-                          type: object
+                          $ref: "#/components/schemas/Camera"
                   - type: object
                     description: Bounds search result
                     properties:
                       type:
                         type: string
-                        example: "bounds"
+                        example: "bounds_search"
                       count:
                         type: integer
                         description: Number of cameras returned
                       cameras:
                         type: array
                         items:
-                          type: object
+                          $ref: "#/components/schemas/Camera"
                   - type: object
                     description: Nearest search result
                     properties:
                       type:
                         type: string
-                        example: "nearest"
+                        example: "nearest_search"
                       count:
                         type: integer
                         description: Number of cameras returned
                       cameras:
                         type: array
                         items:
-                          type: object
+                          $ref: "#/components/schemas/Camera"
 
-  /sse/image:
+  /api:
     get:
       operationId: cameraImage
-      x-url: https://vancam.ai/sse/image
       summary: Get a camera image by asset_id
-      description: Fetch the latest image from a camera given its asset_id.
+      description: Fetch the latest live frame from a camera given its asset_id.
       parameters:
         - in: query
           name: asset_id
@@ -210,7 +205,7 @@ paths:
       x-examples:
         get_image:
           summary: Get camera image by asset_id
-          value: /sse/image?asset_id=123
+          value: /api?asset_id=30145
       responses:
         "200":
           description: Binary camera image (e.g., JPEG)
@@ -221,5 +216,56 @@ paths:
                 format: binary
 
 components:
-  schemas: {}
-
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: >
+        Required on every request. A shared, rate-limited anonymous key works
+        out of the box (1 req/s, 500/month, pooled); get a free personal key
+        for higher limits from your Vancam.ai account page.
+  schemas:
+    Camera:
+      type: object
+      properties:
+        asset_id:
+          type: string
+          description: Vancam camera asset ID
+        latitude:
+          type: number
+        longitude:
+          type: number
+        street_address:
+          type: string
+        direction:
+          type: string
+        camera_class:
+          type: string
+          enum: ["open", "premium"]
+          description: "open cameras have a live image_url; premium cameras do not."
+        level1:
+          type: string
+          description: Country
+        level2:
+          type: string
+          description: State/province
+        level3:
+          type: string
+          description: City
+        distance_meters:
+          type: number
+          description: Present on radius/nearest search results.
+        route_fraction:
+          type: number
+          description: Present on route search results, 0 (origin) to 1 (destination).
+        image_url:
+          type: string
+          description: Primary live frame URL (requires x-api-key header to fetch).
+        image_urls:
+          type: object
+          properties:
+            vancam_api:
+              type: string
+            vancam:
+              type: string

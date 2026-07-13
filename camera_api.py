@@ -1,13 +1,3 @@
-"""
-OpenLens / Vancam camera API client.
-
-Matches the production VanCam web app (vancam_feature_along_route/upload2s3/index.html):
-  - Camera search: api.vancam.ai/cameras/cameras?...
-  - Live images:   api.vancam.ai/api?asset_id=...
-
-Also supports vancam.ai/sse/* endpoints (same PostGIS backend, alternate gateway).
-"""
-
 from __future__ import annotations
 
 import os
@@ -28,21 +18,13 @@ DEFAULT_VANCAM_API_IMAGE_URL = os.getenv(
     "VANCAM_API_IMAGE_URL",
     "https://api.vancam.ai/api",
 )
-DEFAULT_VANCAM_CAMERAS_URL = os.getenv(
-    "VANCAM_SSE_CAMERAS_URL",
-    "https://vancam.ai/sse/cameras",
-)
-DEFAULT_VANCAM_IMAGE_URL = os.getenv(
-    "VANCAM_SSE_IMAGE_URL",
-    "https://vancam.ai/sse/image",
-)
 
 DEFAULT_TIMEOUT_SECONDS = 15
 MAX_LIMIT = 100
 
 # api.vancam.ai requires an x-api-key header. Set VANCAM_API_KEY in your
-# environment (see .env / ENV_SETUP.md) for a personal free-tier key (higher
-# limits) from the web app's /account page. Falls back to a shared, low-limit
+# environment (see .env.example) for a personal free-tier key (higher
+# limits) from the web app's account page. Falls back to a shared, low-limit
 # key (1 req/s, 500/month) — meant to be public — if unset.
 ANONYMOUS_SHARED_API_KEY = "abwSAo91eI8wENsNrZFUE7tC6qGkh9Tw66x4cfcQ"
 VANCAM_API_KEY = os.getenv("VANCAM_API_KEY", ANONYMOUS_SHARED_API_KEY)
@@ -60,7 +42,6 @@ def image_urls(asset_id: Any) -> Dict[str, str]:
     aid = str(int(asset_id)) if isinstance(asset_id, float) and asset_id == int(asset_id) else str(asset_id)
     return {
         "vancam_api": f"{DEFAULT_VANCAM_API_IMAGE_URL}?asset_id={aid}",
-        "vancam": f"{DEFAULT_VANCAM_IMAGE_URL}?asset_id={aid}",
     }
 
 
@@ -106,8 +87,7 @@ def enrich_response(data: Any, *, sort_route: bool = False) -> Any:
     out["_meta"] = {
         "cameras_search_url": cameras_search_url(),
         "image_url_primary": DEFAULT_VANCAM_API_IMAGE_URL,
-        "image_url_alternate": DEFAULT_VANCAM_IMAGE_URL,
-        "source": "openlens",
+        "source": "vancam",
         "image_url_warning": (
             "image_url / image_urls require an x-api-key header and return "
             "403 Forbidden if opened directly (browser, bare curl, or pasted "
@@ -125,7 +105,7 @@ def fetch_cameras(
     sort_route: bool = False,
 ) -> Any:
     """
-    Query the OpenLens spatial camera API.
+    Query the Vancam spatial camera API.
 
     Search modes (same endpoint, different query params — see OpenAPI spec):
       - Bounds:  min_lat, min_lon, max_lat, max_lon [, limit]
@@ -170,23 +150,3 @@ def fetch_image_bytes(asset_id: Any, *, timeout: int = DEFAULT_TIMEOUT_SECONDS) 
         raise RuntimeError(f"Camera image HTTP error: {status}") from e
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Camera image request failed: {e}") from e
-
-
-def fetch_cameras_vancam_sse(params: Dict[str, Any], **kwargs: Any) -> Any:
-    """Same queries via vancam.ai/sse/cameras (alternate gateway)."""
-    clean = {k: v for k, v in params.items() if v is not None}
-    if "limit" in clean:
-        clean["limit"] = max(1, min(int(clean["limit"]), MAX_LIMIT))
-
-    try:
-        response = requests.get(DEFAULT_VANCAM_CAMERAS_URL, params=clean, timeout=kwargs.get("timeout", DEFAULT_TIMEOUT_SECONDS))
-        response.raise_for_status()
-        data = enrich_response(response.json(), sort_route=kwargs.get("sort_route", False))
-        if isinstance(data, dict) and isinstance(data.get("_meta"), dict):
-            data["_meta"]["cameras_search_url"] = DEFAULT_VANCAM_CAMERAS_URL
-        return data
-    except requests.exceptions.HTTPError as e:
-        status = e.response.status_code if e.response is not None else "unknown"
-        raise RuntimeError(f"Vancam SSE API HTTP error: {status}") from e
-    except requests.exceptions.RequestException as e:
-        raise RuntimeError(f"Vancam SSE API request failed: {e}") from e
