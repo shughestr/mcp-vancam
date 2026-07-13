@@ -39,11 +39,16 @@ For Claude Desktop or Claude Code, add to your MCP config (see `.mcp.json` in th
   "mcpServers": {
     "vancam": {
       "command": "python3",
-      "args": ["/absolute/path/to/mcp-vancam/server.py"]
+      "args": ["/absolute/path/to/mcp-vancam/server.py"],
+      "env": {
+        "VANCAM_API_KEY": ""
+      }
     }
   }
 }
 ```
+
+`VANCAM_API_KEY` is optional — leave it blank to use the shared, rate-limited key.
 
 Restart your client, and the tools below become available.
 

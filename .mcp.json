@@ -2,7 +2,10 @@
   "mcpServers": {
     "vancam": {
       "command": "python3",
-      "args": ["server.py"]
+      "args": ["server.py"],
+      "env": {
+        "VANCAM_API_KEY": ""
+      }
     }
   }
 }
